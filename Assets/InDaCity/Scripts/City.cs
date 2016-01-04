@@ -18,7 +18,9 @@ namespace InDaCity
         public float maxHeight = 50.0f;
         public float quarterSize = 10.0f;
 
-        public float streetWidth = 1.0f;
+        public float streetWidthMin = 1.0f;
+        public float streetWidthMid = 2.0f;
+        public float streetWidthMax = 4.0f;
 
         float Rand(float amp)
         {
@@ -26,10 +28,15 @@ namespace InDaCity
             return Random.Range(-x, x);
         }
         
-        private float ComputeHeight(Polygon polygon)
+        protected float ComputeHeight(Polygon polygon)
         {
             var mh = Random.Range(0, 10) > 8 ? maxHeight : 0.5f * maxHeight;
             return Random.Range(1, mh * (1 - polygon.distance / maxSize));
+        }
+
+        protected bool DiscardByDistance(float distance)
+        {
+            return (distance > 0.97 || (distance > 0.8 && Random.Range(0, 10) < 5));
         }
 
         private List<Polygon> QuarterlyDivide(Polygon input)
@@ -39,8 +46,8 @@ namespace InDaCity
             var xNum = (int) Mathf.Ceil(bb.width / quarterSize);
             var yNum = (int) Mathf.Ceil(bb.height / quarterSize);
 
-            var dx = (bb.width - streetWidth * (xNum - 1)) / xNum;
-            var dy = (bb.height - streetWidth * (yNum - 1)) / yNum;
+            var dx = (bb.width - streetWidthMin * (xNum - 1)) / xNum;
+            var dy = (bb.height - streetWidthMin * (yNum - 1)) / yNum;
 
             var results = new List<Polygon>();
 
@@ -65,9 +72,9 @@ namespace InDaCity
                         results.Add(qCut);
                     }
 
-                    y += dy + streetWidth;
+                    y += dy + streetWidthMin;
                 }
-                x += dx + streetWidth;
+                x += dx + streetWidthMin;
             }
             return results;
         }
@@ -114,7 +121,7 @@ namespace InDaCity
                 var distance = location.magnitude / maxSize;
 
                 // if too far from the center -discard it
-                if (distance > 0.97 || (distance > 0.8 && Random.Range(0, 10) < 5))
+                if (DiscardByDistance(distance))
                     continue;
 
                 // convert Site to Polygon
@@ -122,8 +129,7 @@ namespace InDaCity
                 if (polygon.valid)
                 {
                     // make streets
-                    //      polygon.ShrinkAbs(5.0f);
-                    polygon.Shrink();
+                    polygon.ShrinkAbs(streetWidthMid * 0.5f);
 
                     var quartars = QuarterlyDivide(polygon);
                     results.AddRange(quartars);

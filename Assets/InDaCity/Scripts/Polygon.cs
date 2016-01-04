@@ -127,7 +127,7 @@ namespace InDaCity
             {
                 var line = new Line(cycledVert[i - 1], cycledVert[i]);
                 line.s += line.n * absShift;
-                line.e += line.e * absShift;
+                line.e += line.n * absShift;
                 edges.Add(line);
             }
 
